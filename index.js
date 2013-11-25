@@ -1,4 +1,5 @@
 var path = require('path');
+var extend = require('util')._extend;
 
 var ProgressBar = require('progress');
 var annotate = require('annotate');
@@ -26,43 +27,58 @@ function generateShots(o, cb, tickCb) {
 
         cb();
     };
+    var format = trim.left(o.format, '.');
 
-    async.map(o.outputs, function(output, cb) {
-        mkdirp(output.path, function(err) {
-            if(err) return cb(err);
+    async.map(o.inputs, function(input, cb) {
+        shoot(extend({
+            format: format
+        }, input), function(err, d) {
+            tickCb(err, function() {
+                cb(err, d);
+            });
+        });
+    }, function(err, paths) {
+        if(err) return cb(err);
 
-            async.map(o.inputs, function(input, cb) {
-                shoot({
-                    input: input,
-                    output: output.path,
-                    dims: output.dims,
-                    format: o.format
-                }, function(err) {
-                    tickCb(err, cb);
-                });
+        async.each(paths, function(p, cb) {
+            async.each(o.outputs, function(output, cb) {
+                mkdirp(output.path, function(err) {
+                    if(err) return cb(err);
+
+                    resize({
+                        input: p.path,
+                        output: path.join(output.path, p.name) + '.' + format,
+                        dims: output.dims
+                    }, function(err) {
+                        tickCb(err, cb);
+                    });
+                }, cb);
             }, cb);
         });
-    }, cb);
+    });
 }
 
-var shoot = annotate('shoot', 'Captures and resizes').
-    on(is.object, is.fn, function shot(o, cb) {
-        o.format = trim.left(o.format, '.');
-
+var shoot = annotate('shoot', 'Generates screenshot and returns its name and path to it').
+    on(is.object, is.fn, function(o, cb) {
         tmp.file({postfix: '.' + o.format}, function(err, srcPath) {
             if(err) return cb(err);
 
-            webshot(o.input.url, srcPath, function(err) {
-                if(err) return cb(err);
-
-                var dstPath = path.join(o.output, o.input.name + '.' + o.format);
-
-                im.resize({
-                    srcPath: srcPath,
-                    dstPath: dstPath,
-                    width: o.dims.width,
-                    height: o.dims.height
-                }, cb);
+            webshot(o.url, srcPath, function(err) {
+                cb(err, {
+                    name: o.name,
+                    path: srcPath
+                });
             });
         });
     });
+
+var resize = annotate('resize', 'Resizes and outputs images in given paths').
+    on(is.object, is.fn, function(o, cb) {
+        im.resize({
+            srcPath: o.input,
+            dstPath: o.output,
+            width: o.dims.width,
+            height: o.dims.height
+        }, cb);
+    });
+

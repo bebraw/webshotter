@@ -33,7 +33,7 @@ function main() {
         }
     ];
     var bar = new ProgressBar(':bar', {
-        total: inputs.length * outputs.length
+        total: inputs.length + inputs.length * outputs.length
     });
 
     webshotter({
