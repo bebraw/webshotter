@@ -2,7 +2,7 @@
   "name": "webshotter",
   "description": "Capture multiple screenshots per website",
   "author": "Juho Vepsalainen <bebraw@gmail.com>",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "./index.js",
   "repository": {
     "type": "git",
