@@ -13,14 +13,19 @@ var webshot = require('webshot');
 
 module.exports = annotate('webshotter',
     'Captures screenshots based on given `urls` and `outputs`').
-    on(function(o) {
-        return is.object(o) && is.array(o.urls) && is.array(o.outputs);
-    }, is.fn, generateShots);
+    on(validateObject, is.fn, generateShots).
+    on(validateObject, is.fn, is.fn, generateShots);
 
-function generateShots(o, cb) {
-    var bar = new ProgressBar(':bar', {
-        total: o.urls.length * o.outputs.length
-    });
+function validateObject(o) {
+    return is.object(o) && is.array(o.urls) && is.array(o.outputs);
+}
+
+function generateShots(o, cb, tickCb) {
+    tickCb = tickCb || function(err, cb) {
+        if(err) return cb(err);
+
+        cb();
+    };
 
     async.map(o.outputs, function(output, cb) {
         mkdirp(output.path, function(err) {
@@ -33,11 +38,7 @@ function generateShots(o, cb) {
                     dims: output.dims,
                     format: o.format
                 }, function(err) {
-                    if(err) return cb(err);
-
-                    bar.tick();
-
-                    cb();
+                    tickCb(err, cb);
                 });
             }, cb);
         });
