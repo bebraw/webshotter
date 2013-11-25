@@ -1,20 +1,23 @@
 var path = require('path');
 
 var ProgressBar = require('progress');
+var annotate = require('annotate');
 var async = require('async');
 var im = require('imagemagick');
+var is = require('annois');
 var mkdirp = require('mkdirp');
 var tmp = require('tmp');
 var trim = require('trimmer');
 var webshot = require('webshot');
 
 
-module.exports = generateShots;
+module.exports = annotate('webshotter',
+    'Captures screenshots based on given `urls` and `outputs`').
+    on(function(o) {
+        return is.object(o) && is.array(o.urls) && is.array(o.outputs);
+    }, is.fn, generateShots);
 
 function generateShots(o, cb) {
-    if(!o.urls) return console.warn('Missing urls');
-    if(!o.outputs) return console.warn('Missing outputs');
-
     var bar = new ProgressBar(':bar', {
         total: o.urls.length * o.outputs.length
     });
@@ -24,7 +27,7 @@ function generateShots(o, cb) {
             if(err) return cb(err);
 
             async.map(o.urls, function(url, cb) {
-                shot({
+                shoot({
                     url: url,
                     output: output.path,
                     dims: output.dims,
@@ -41,24 +44,24 @@ function generateShots(o, cb) {
     }, cb);
 }
 
-function shot(o, cb) {
-    // TODO: assert that url, output, dims and format have been set
-    o.format = trim.left(o.format, '.');
+var shoot = annotate('shoot', 'Captures and resizes').
+    on(is.object, is.fn, function shot(o, cb) {
+        o.format = trim.left(o.format, '.');
 
-    tmp.file({postfix: '.' + o.format}, function(err, srcPath) {
-        if(err) return cb(err);
-
-        webshot(o.url, srcPath, function(err) {
+        tmp.file({postfix: '.' + o.format}, function(err, srcPath) {
             if(err) return cb(err);
 
-            var dstPath = path.join(o.output, o.url + '.' + o.format);
+            webshot(o.url, srcPath, function(err) {
+                if(err) return cb(err);
 
-            im.resize({
-                srcPath: srcPath,
-                dstPath: dstPath,
-                width: o.dims.width,
-                height: o.dims.height
-            }, cb);
+                var dstPath = path.join(o.output, o.url + '.' + o.format);
+
+                im.resize({
+                    srcPath: srcPath,
+                    dstPath: dstPath,
+                    width: o.dims.width,
+                    height: o.dims.height
+                }, cb);
+            });
         });
     });
-}

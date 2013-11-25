@@ -30,6 +30,8 @@
     "mkdirp": "~0.3.5",
     "trimmer": "0.0.3",
     "tmp": "0.0.21",
-    "webshot": "~0.7.0"
+    "webshot": "~0.7.0",
+    "annotate": "~0.7.0",
+    "annois": "~0.3.0"
   }
 }
