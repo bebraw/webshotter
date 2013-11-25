@@ -1,6 +1,6 @@
 {
   "name": "webshotter",
-  "description": "Provides means to capture multiple screenshots per given site",
+  "description": "Capture multiple screenshots per website",
   "author": "Juho Vepsalainen <bebraw@gmail.com>",
   "version": "0.2.0",
   "main": "./index.js",
