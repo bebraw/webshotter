@@ -5,7 +5,15 @@ var webshotter = require('./index');
 main();
 
 function main() {
-    var urls = ['google.com', 'yahoo.com'];
+    var inputs = [{
+            name: 'google',
+            url: 'google.com'
+        },
+        {
+            name: 'yahoo',
+            url: 'yahoo.com'
+        }
+    ];
     var outputs = [
         {
             path: 'output/regular',
@@ -24,7 +32,7 @@ function main() {
     ];
 
     webshotter({
-        urls: urls,
+        inputs: inputs,
         outputs: outputs,
         format: 'jpg'
     }, function(err) {

@@ -17,7 +17,7 @@ module.exports = annotate('webshotter',
     on(validateObject, is.fn, is.fn, generateShots);
 
 function validateObject(o) {
-    return is.object(o) && is.array(o.urls) && is.array(o.outputs);
+    return is.object(o) && is.array(o.inputs) && is.array(o.outputs);
 }
 
 function generateShots(o, cb, tickCb) {
@@ -31,9 +31,9 @@ function generateShots(o, cb, tickCb) {
         mkdirp(output.path, function(err) {
             if(err) return cb(err);
 
-            async.map(o.urls, function(url, cb) {
+            async.map(o.inputs, function(input, cb) {
                 shoot({
-                    url: url,
+                    input: input,
                     output: output.path,
                     dims: output.dims,
                     format: o.format
@@ -52,10 +52,10 @@ var shoot = annotate('shoot', 'Captures and resizes').
         tmp.file({postfix: '.' + o.format}, function(err, srcPath) {
             if(err) return cb(err);
 
-            webshot(o.url, srcPath, function(err) {
+            webshot(o.input.url, srcPath, function(err) {
                 if(err) return cb(err);
 
-                var dstPath = path.join(o.output, o.url + '.' + o.format);
+                var dstPath = path.join(o.output, o.input.name + '.' + o.format);
 
                 im.resize({
                     srcPath: srcPath,
